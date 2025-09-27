@@ -1,0 +1,7 @@
+[tool.poetry]
+name = "financial_analyzer"
+version = "0.1.0"
+description = "Fund screener intern project implementation"
+authors = ["Auto Generated <you@example.com>"]
+readme = "README.md"
+license = "MIT"

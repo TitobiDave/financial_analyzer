@@ -1,0 +1,7 @@
+pandas
+yfinance
+pydantic
+typer[all]
+sqlalchemy
+pyyaml
+pytest
