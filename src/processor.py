@@ -1,33 +1,35 @@
 from typing import Dict, Any
 import pandas as pd
 import numpy as np
-from decimal import Decimal
 import logging
 
 logger = logging.getLogger(__name__)
 
+
 def process_data(raw: Dict[str, Any], min_sma_days: int = 200) -> pd.DataFrame:
-    prices: pd.DataFrame = raw.get('prices').copy()
-    prices = prices.sort_values('date').set_index('date')
+    prices: pd.DataFrame = raw.get("prices").copy()
+    prices = prices.sort_values("date").set_index("date")
 
     # --- Technical indicators ---
-    prices['SMA50'] = prices['close'].rolling(window=50, min_periods=1).mean()
-    prices['SMA200'] = prices['close'].rolling(window=200, min_periods=1).mean()
-    prices['52w_high'] = prices['close'].rolling(window=252, min_periods=1).max()
-    prices['pct_from_52w_high'] = (prices['close'] - prices['52w_high']) / prices['52w_high'] * 100
+    prices["SMA50"] = prices["close"].rolling(window=50, min_periods=1).mean()
+    prices["SMA200"] = prices["close"].rolling(window=200, min_periods=1).mean()
+    prices["52w_high"] = prices["close"].rolling(window=252, min_periods=1).max()
+    prices["pct_from_52w_high"] = (
+        (prices["close"] - prices["52w_high"]) / prices["52w_high"] * 100
+    )
 
     # --- Fundamentals ---
-    info = raw.get('info', {}) or {}
+    info = raw.get("info", {}) or {}
 
     # Book Value Per Share (BVPS)
     bvps = None
     try:
         # In yfinance, bookValue is already per share for many tickers
-        if info.get('bookValue'):
-            bvps = info['bookValue']
+        if info.get("bookValue"):
+            bvps = info["bookValue"]
         else:
-            total_equity = info.get('totalAssets') or None
-            shares = info.get('sharesOutstanding') or None
+            total_equity = info.get("totalAssets") or None
+            shares = info.get("sharesOutstanding") or None
             if total_equity and shares and shares > 0:
                 bvps = total_equity / shares
     except Exception:
@@ -35,18 +37,19 @@ def process_data(raw: Dict[str, Any], min_sma_days: int = 200) -> pd.DataFrame:
 
     # Price-to-Book (P/B) Ratio
     if bvps and bvps > 0:
-        prices['bvps'] = bvps
-        prices['pb_ratio'] = prices['close'] / bvps
+        prices["bvps"] = bvps
+        prices["pb_ratio"] = prices["close"] / bvps
     else:
-        prices['bvps'] = np.nan
-        prices['pb_ratio'] = np.nan
+        prices["bvps"] = np.nan
+        prices["pb_ratio"] = np.nan
 
     # Enterprise Value (simplified)
-    ev = info.get('enterpriseValue')
-    prices['enterprise_value'] = ev if ev else np.nan
+    ev = info.get("enterpriseValue")
+    prices["enterprise_value"] = ev if ev else np.nan
 
     prices.reset_index(inplace=True)
     return prices
+
 
 def process_data(raw: Dict[str, Any], min_sma_days: int = 200) -> pd.DataFrame:
     """
@@ -69,14 +72,22 @@ def process_data(raw: Dict[str, Any], min_sma_days: int = 200) -> pd.DataFrame:
 
     # --- Fundamentals ---
     fundamentals = raw.get("fundamentals")
-    if fundamentals is not None and hasattr(fundamentals, "T") and not fundamentals.empty:
+    if (
+        fundamentals is not None
+        and hasattr(fundamentals, "T")
+        and not fundamentals.empty
+    ):
         try:
             # Transpose: rows become report dates
             fdf = fundamentals.T
             fdf.index = pd.to_datetime(fdf.index).date
 
             # Keep only useful columns if available
-            keep_cols = [c for c in ["TotalAssets", "TotalLiab", "OrdinarySharesNumber"] if c in fdf.columns]
+            keep_cols = [
+                c
+                for c in ["TotalAssets", "TotalLiab", "OrdinarySharesNumber"]
+                if c in fdf.columns
+            ]
             if keep_cols:
                 fdf = fdf[keep_cols]
 

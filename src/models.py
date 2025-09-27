@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, validator
 from datetime import date
 from decimal import Decimal
 from typing import Optional
+
 
 class PriceRow(BaseModel):
     date: date
@@ -11,12 +12,13 @@ class PriceRow(BaseModel):
     close: Decimal
     volume: int
 
-    @validator('high')
+    @validator("high")
     def high_ge_low(cls, v, values):
-        low = values.get('low')
+        low = values.get("low")
         if low is not None and v < low:
-            raise ValueError('high must be >= low')
+            raise ValueError("high must be >= low")
         return v
+
 
 class FundamentalRow(BaseModel):
     date: date
@@ -24,6 +26,7 @@ class FundamentalRow(BaseModel):
     total_debt: Optional[Decimal] = None
     cash: Optional[Decimal] = None
     shares_outstanding: Optional[Decimal] = None
+
 
 class SignalEvent(BaseModel):
     date: date
