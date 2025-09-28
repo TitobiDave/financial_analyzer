@@ -4,7 +4,6 @@ from datetime import date, timedelta
 
 
 def test_golden_and_death_cross():
-    # create SMA50 and SMA200 crossover scenario
     dates = [date(2020, 1, 1) + timedelta(days=i) for i in range(10)]
     df = pd.DataFrame(
         {

@@ -1,34 +1,24 @@
-from pydantic import BaseModel, validator
-from datetime import date
-from decimal import Decimal
+from pydantic import BaseModel, Field
 from typing import Optional
+from datetime import date as dt_date
 
 
-class PriceRow(BaseModel):
-    date: date
-    open: Decimal
-    high: Decimal
-    low: Decimal
-    close: Decimal
-    volume: int
+class DailyPrice(BaseModel):
+    """Schema for a single row of historical price data."""
 
-    @validator("high")
-    def high_ge_low(cls, v, values):
-        low = values.get("low")
-        if low is not None and v < low:
-            raise ValueError("high must be >= low")
-        return v
+    date: dt_date = Field(..., description="Trading date")
+    open: float = Field(..., description="Opening price")
+    high: float = Field(..., description="Highest price of the day")
+    low: float = Field(..., description="Lowest price of the day")
+    close: float = Field(..., description="Closing price")
+    volume: int = Field(..., description="Trading volume")
 
 
-class FundamentalRow(BaseModel):
-    date: date
-    book_value: Optional[Decimal] = None
-    total_debt: Optional[Decimal] = None
-    cash: Optional[Decimal] = None
-    shares_outstanding: Optional[Decimal] = None
+class FundamentalMetrics(BaseModel):
+    """Subset of fundamental metrics we care about."""
 
-
-class SignalEvent(BaseModel):
-    date: date
-    ticker: str
-    type: str  # GoldenCross or DeathCross
+    bvps: Optional[float] = Field(None, description="Book value per share")
+    pb_ratio: Optional[float] = Field(None, description="Price-to-book ratio")
+    enterprise_value: Optional[float] = Field(
+        None, description="Enterprise value of the company"
+    )
